@@ -6,7 +6,6 @@ Documentação: https://documenter.getpostman.com/view/7520874/2s9YXe84q4
 Tecnologias e Ferramentas utilizadas:
 - Springboot
 - Java 17
-- Lombok
 - Bean Validator
 - JPA
 - PostgreSQL
