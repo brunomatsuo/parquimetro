@@ -7,9 +7,9 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
-@Table(name = "tb_vagas")
+@Table(name = "tb_parquimetro")
 @EnableAutoConfiguration
-public class Vaga {
+public class Parquimetro {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,7 +18,7 @@ public class Vaga {
     private LocalDateTime entrada;
     private LocalDateTime saidaAte;
 
-    public Vaga(){}
+    public Parquimetro(){}
 
     public Long getId() {
         return id;
@@ -56,8 +56,8 @@ public class Vaga {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Vaga vaga = (Vaga) o;
-        return id.equals(vaga.id) && placa.equals(vaga.placa) && entrada.equals(vaga.entrada) && saidaAte.equals(vaga.saidaAte);
+        Parquimetro parquimetro = (Parquimetro) o;
+        return id.equals(parquimetro.id) && placa.equals(parquimetro.placa) && entrada.equals(parquimetro.entrada) && saidaAte.equals(parquimetro.saidaAte);
     }
 
     @Override

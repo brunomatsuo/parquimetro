@@ -1,8 +1,8 @@
 package com.parquimetro.fiap.dominio.controller;
 
 import com.parquimetro.fiap.dominio.dto.enums.Status;
-import com.parquimetro.fiap.dominio.dto.VagaDTO;
-import com.parquimetro.fiap.dominio.services.VagaService;
+import com.parquimetro.fiap.dominio.dto.ParquimetroDTO;
+import com.parquimetro.fiap.dominio.services.ParquimetroService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Path;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,21 +22,21 @@ import java.util.stream.Collectors;
 public class EstacionaController {
 
     @Autowired
-    private VagaService service;
+    private ParquimetroService service;
 
     @Autowired
     private Validator validator;
 
     @GetMapping
-    public ResponseEntity<List<VagaDTO>> getVagas(){
+    public ResponseEntity<List<ParquimetroDTO>> getVagas(){
         return ResponseEntity.ok(service.findAll());
     }
 
     @GetMapping("/{placa}")
     public ResponseEntity findByPlaca(@PathVariable String placa){
-        VagaDTO vagaDTO = service.findByPlaca(placa);
-        if (vagaDTO.getPlaca() != null){
-            return ResponseEntity.ok(vagaDTO);
+        ParquimetroDTO parquimetroDTO = service.findByPlaca(placa);
+        if (parquimetroDTO.getPlaca() != null){
+            return ResponseEntity.ok(parquimetroDTO);
         }
         else
             return ResponseEntity.notFound().build();
@@ -48,28 +48,28 @@ public class EstacionaController {
     }
 
     @PostMapping
-    public ResponseEntity registrarVeiculoVaga(@RequestBody VagaDTO vagaDTO){
-        Map<Path, String> violacoesToMap = validar(vagaDTO);
+    public ResponseEntity registrarVeiculoVaga(@RequestBody ParquimetroDTO parquimetroDTO){
+        Map<Path, String> violacoesToMap = validar(parquimetroDTO);
 
         if(!violacoesToMap.isEmpty()){
             return ResponseEntity.badRequest().body(violacoesToMap);
         }
 
-        VagaDTO dto = service.insert(vagaDTO);
+        ParquimetroDTO dto = service.insert(parquimetroDTO);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand((dto.getId())).toUri();
 
         return ResponseEntity.created(uri).body(dto);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity updateVeiculoVaga(@PathVariable Long id, @RequestBody VagaDTO vagaDTO){
-        Map<Path, String> violacoesToMap = validar(vagaDTO);
+    public ResponseEntity updateVeiculoVaga(@PathVariable Long id, @RequestBody ParquimetroDTO parquimetroDTO){
+        Map<Path, String> violacoesToMap = validar(parquimetroDTO);
 
         if(!violacoesToMap.isEmpty()){
             return ResponseEntity.badRequest().body(violacoesToMap);
         }
 
-        return ResponseEntity.ok(service.update(id, vagaDTO));
+        return ResponseEntity.ok(service.update(id, parquimetroDTO));
     }
 
     private <T> Map<Path, String> validar(T dto){

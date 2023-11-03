@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDateTime;
 
-public class VagaDTO {
+public class ParquimetroDTO {
 
     @JsonProperty
     private Long id;
@@ -19,7 +19,7 @@ public class VagaDTO {
     @JsonProperty
     private int ticket;
 
-    public VagaDTO(){}
+    public ParquimetroDTO(){}
 
     public Long getId() {
         return id;
