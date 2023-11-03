@@ -65,7 +65,7 @@ public class ParquimetroService {
                     return mapperEntityToDto(parquimetro);
                 }
                 else {
-                    throw new ControllerNotFoundException("Veículo não encontrado na vaga na data de hoje.");
+                    throw new ControllerNotFoundException("Veículo não encontrado na vaga na data de hoje. ");
                 }
             }
             else
