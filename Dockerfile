@@ -5,8 +5,7 @@ WORKDIR /app
 
 COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
-RUN sudo chmod 775 ./mvnw dependency:go-offline
 
 COPY src ./src
 
-CMD ["./mvnw", "spring-boot:run"]
+CMD ["sudo ./mvnw", "spring-boot:run"]
