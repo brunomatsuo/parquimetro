@@ -1,4 +1,4 @@
-FROM openjdk:17-alpin
+FROM openjdk:17-jdk-slim-buster
 
 
 	ENV APP_NAME parquimetro-0.0.1-SNAPSHOT
