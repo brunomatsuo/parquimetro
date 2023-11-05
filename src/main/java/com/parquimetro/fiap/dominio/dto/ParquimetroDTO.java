@@ -2,6 +2,7 @@ package com.parquimetro.fiap.dominio.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDateTime;
 
@@ -17,7 +18,8 @@ public class ParquimetroDTO {
     @JsonProperty
     private LocalDateTime saidaAte;
     @JsonProperty
-    private int ticket;
+    @Positive(message = "Insira um número de tickets válido.")
+    private int tickets;
 
     public ParquimetroDTO(){}
 
@@ -53,11 +55,11 @@ public class ParquimetroDTO {
         this.saidaAte = saidaAte;
     }
 
-    public int getTicket() {
-        return ticket;
+    public int getTickets() {
+        return tickets;
     }
 
-    public void setTicket(int ticket) {
-        this.ticket = ticket;
+    public void setTickets(int tickets) {
+        this.tickets = tickets;
     }
 }
