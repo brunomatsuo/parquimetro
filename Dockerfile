@@ -13,4 +13,4 @@ FROM openjdk:17-jdk-slim-buster
 	CMD java -jar ${APP_NAME}.jar
 
 
-	EXPOSE 8080e
+	EXPOSE 8080
