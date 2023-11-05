@@ -6,6 +6,9 @@ import com.parquimetro.fiap.dominio.services.ParquimetroService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Path;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Validator;
@@ -28,18 +31,18 @@ public class EstacionaController {
     private Validator validator;
 
     @GetMapping
-    public ResponseEntity<List<ParquimetroDTO>> getVagas(){
-        return ResponseEntity.ok(service.findAll());
+    public ResponseEntity<Page<ParquimetroDTO>> getVagas(@RequestParam(value = "pagina", defaultValue = "0") Integer pagina,
+                                                         @RequestParam(value = "quatidade", defaultValue = "30") Integer quantidade,
+                                                         @RequestParam(value = "direcao", defaultValue = "DESC") String direcao,
+                                                         @RequestParam(value = "ordenacao", defaultValue = "id") String ordenacao)
+    {
+        PageRequest pageRequest = PageRequest.of(pagina, quantidade, Sort.Direction.valueOf(direcao), ordenacao);
+        return ResponseEntity.ok(service.findAll(pageRequest));
     }
 
     @GetMapping("/{placa}")
     public ResponseEntity findByPlaca(@PathVariable String placa){
-        ParquimetroDTO parquimetroDTO = service.findByPlaca(placa);
-        if (parquimetroDTO.getPlaca() != null){
-            return ResponseEntity.ok(parquimetroDTO);
-        }
-        else
-            return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(service.getByPlaca(placa));
     }
 
     @GetMapping("/status/{placa}")
@@ -61,15 +64,15 @@ public class EstacionaController {
         return ResponseEntity.created(uri).body(dto);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity updateVeiculoVaga(@PathVariable Long id, @RequestBody ParquimetroDTO parquimetroDTO){
+    @PutMapping
+    public ResponseEntity updateVeiculoVaga(@RequestBody ParquimetroDTO parquimetroDTO){
         Map<Path, String> violacoesToMap = validar(parquimetroDTO);
 
         if(!violacoesToMap.isEmpty()){
             return ResponseEntity.badRequest().body(violacoesToMap);
         }
 
-        return ResponseEntity.ok(service.update(id, parquimetroDTO));
+        return ResponseEntity.ok(service.update(parquimetroDTO));
     }
 
     private <T> Map<Path, String> validar(T dto){

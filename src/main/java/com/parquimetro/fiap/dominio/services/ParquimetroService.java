@@ -1,105 +1,120 @@
-package com.parquimetro.fiap.dominio.services;
+    package com.parquimetro.fiap.dominio.services;
 
-import com.parquimetro.fiap.dominio.dto.enums.Status;
-import com.parquimetro.fiap.dominio.dto.ParquimetroDTO;
-import com.parquimetro.fiap.dominio.entities.Parquimetro;
-import com.parquimetro.fiap.dominio.repository.IParquimetroRepository;
-import com.parquimetro.fiap.exception.service.ControllerNotFoundException;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+    import com.parquimetro.fiap.dominio.dto.enums.Status;
+    import com.parquimetro.fiap.dominio.dto.ParquimetroDTO;
+    import com.parquimetro.fiap.dominio.entities.Parquimetro;
+    import com.parquimetro.fiap.dominio.repository.IParquimetroRepository;
+    import com.parquimetro.fiap.exception.service.ControllerNotFoundException;
+    import jakarta.persistence.EntityNotFoundException;
+    import jakarta.transaction.Transactional;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.data.domain.Page;
+    import org.springframework.data.domain.Pageable;
+    import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+    import java.time.Duration;
+    import java.time.LocalDateTime;
+    import java.util.ArrayList;
+    import java.util.List;
 
-@Service
-@Transactional
-public class ParquimetroService {
+    @Service
+    @Transactional
+    public class ParquimetroService {
 
-    @Autowired
-    private IParquimetroRepository repository;
+        @Autowired
+        private IParquimetroRepository repository;
 
-    public List<ParquimetroDTO> findAll() {
-        List<ParquimetroDTO> dtos = new ArrayList<>();
-        List<Parquimetro> list = repository.findAll();
-        list.forEach(parquimetro -> {
-            dtos.add(mapperEntityToDto(parquimetro));
-        });
-        return dtos;
-    }
+        private static final int MINUTOS_ACRESCIMO = 30;
 
-    public ParquimetroDTO findByPlaca(String placa) {
-        return mapperEntityToDto(repository.findByPlacaOrderByIdDesc(placa).stream().findFirst().orElse(new Parquimetro()));
-    }
+        public Page<ParquimetroDTO> findAll(Pageable pageable) {
+            List<ParquimetroDTO> dtos = new ArrayList<>();
+            Page<Parquimetro> list = repository.findAll(pageable);
+            return list.map(this::mapperEntityToDto);
+        }
 
-    public ParquimetroDTO insert(ParquimetroDTO parquimetroDTO){
-        try {
-            Parquimetro parquimetro = new Parquimetro();
-            parquimetro.setPlaca(parquimetroDTO.getPlaca());
-            parquimetro.setEntrada(LocalDateTime.now());
-            //cada ticket adiciona 30 minutos na saída;
-            parquimetro.setSaidaAte(LocalDateTime.now().plusMinutes(parquimetroDTO.getTicket() * 30));
+        public ParquimetroDTO getByPlaca(String placa) {
+            return mapperEntityToDto(findByPlaca(placa));
+        }
+
+            public Parquimetro findByPlaca(String placa) {
+                    return repository.findByPlacaOrderByIdDesc(placa)
+                       .stream().findFirst()
+                       .orElseThrow(() -> {
+                            throw new ControllerNotFoundException("Veículo não encontrado.");
+                       });
+            }
+
+        public ParquimetroDTO insert(ParquimetroDTO parquimetroDTO){
+            try {
+                Parquimetro parquimetro = new Parquimetro();
+                parquimetro.setPlaca(parquimetroDTO.getPlaca());
+                parquimetro.setEntrada(LocalDateTime.now());
+                parquimetro.setSaidaAte(LocalDateTime.now().plusMinutes(parquimetroDTO.getTickets() * MINUTOS_ACRESCIMO));
+                repository.save(parquimetro);
+
+                return mapperEntityToDto(parquimetro);
+            }
+            catch (Exception e){
+                throw new ControllerNotFoundException("Erro ao cadastrar veículo na vaga.");
+            }
+        }
+
+        public ParquimetroDTO update(ParquimetroDTO parquimetroDTO){
+            Parquimetro parquimetro = findByPlaca(parquimetroDTO.getPlaca());
+
+            LocalDateTime dataAtual = LocalDateTime.now();
+            LocalDateTime dataEntrada = parquimetro.getEntrada();
+
+            if (!verificaDataValida(dataAtual, dataEntrada)) {
+                throw new ControllerNotFoundException("Veículo não encontrado na vaga na data de hoje.");
+            }
+
+            int tickets = parquimetroDTO.getTickets();
+            LocalDateTime dataSaida = parquimetro.getSaidaAte();
+            parquimetro.setSaidaAte(calcularNovaSaida(dataAtual, dataSaida, tickets));
+
             repository.save(parquimetro);
 
             return mapperEntityToDto(parquimetro);
-        }
-        catch (EntityNotFoundException e){
-            throw new ControllerNotFoundException("Erro ao cadastrar veículo na vaga.");
-        }
-    }
 
-    public ParquimetroDTO update(Long id, ParquimetroDTO parquimetroDTO){
-        try {
-            Parquimetro parquimetro = repository.findById(id).orElse(new Parquimetro());
-            LocalDateTime dataAgora = LocalDateTime.now();
-            int minutosExtra = parquimetroDTO.getTicket() * 30;
-
-            if (parquimetro.getPlaca() != null) {
-                if(parquimetro.getEntrada().toLocalDate().isEqual(dataAgora.toLocalDate())) {
-                    parquimetro.setSaidaAte(parquimetro.getSaidaAte().isAfter(dataAgora) ?
-                            parquimetro.getSaidaAte().plusMinutes(minutosExtra) : dataAgora.plusMinutes(minutosExtra));
-                    repository.save(parquimetro);
-                    return mapperEntityToDto(parquimetro);
-                }
-                else {
-                    throw new ControllerNotFoundException("Veículo não encontrado na vaga na data de hoje.");
-                }
             }
-            else
-                throw new ControllerNotFoundException("Veículo não encontrado na vaga.");
-        }
-        catch (EntityNotFoundException e) {
-            throw new ControllerNotFoundException("Veículo não encontrado na vaga.");
-        }
-    }
 
-    public Status getStatus(String placa){
-        ParquimetroDTO parquimetroDTO = findByPlaca(placa);
+        public Status getStatus(String placa){
 
-        if(parquimetroDTO.getPlaca() == null)
+            try {
+                Parquimetro parquimetro = findByPlaca(placa);
+                Long durationMinutes = getDurationBetween(LocalDateTime.now(), parquimetro.getSaidaAte());
+
+                Status status = durationMinutes <= 0 ? Status.EXPIRADO : Status.ATIVO;
+                return status;
+
+            } catch (EntityNotFoundException e) {
+                return Status.NAO_ENCONTRADO;
+            }
+        }
+
+        private long getDurationBetween(LocalDateTime dataAtual, LocalDateTime dataSaida){
+            return Duration.between(dataAtual, dataSaida).toMinutes();
+
+        }
+
+        private Boolean verificaDataValida(LocalDateTime dataAtual, LocalDateTime dataEntrada){
+            return dataEntrada.toLocalDate().isEqual(dataAtual.toLocalDate());
+        }
+
+        private LocalDateTime calcularNovaSaida(LocalDateTime dataAtual, LocalDateTime dataSaida, int tickets)
         {
-            return Status.NAO_ENCONTRADO;
+            int minutosExtra = tickets * MINUTOS_ACRESCIMO;
+            return dataSaida.isAfter(dataAtual) ? dataSaida.plusMinutes(minutosExtra) : dataAtual.plusMinutes(minutosExtra);
         }
 
-        Duration duration = Duration.between(LocalDateTime.now(), parquimetroDTO.getSaidaAte());
-        double durationMinutes = duration.toMinutes();
+        private ParquimetroDTO mapperEntityToDto(Parquimetro parquimetro){
+            ParquimetroDTO parquimetroDTO = new ParquimetroDTO();
+            parquimetroDTO.setId(parquimetro.getId());
+            parquimetroDTO.setPlaca(parquimetro.getPlaca());
+            parquimetroDTO.setEntrada(parquimetro.getEntrada());
+            parquimetroDTO.setSaidaAte(parquimetro.getSaidaAte());
 
-        if(durationMinutes <= 0) {
-            return Status.EXPIRADO;
+            return parquimetroDTO;
         }
-        else return Status.ATIVO;
     }
-
-    private ParquimetroDTO mapperEntityToDto(Parquimetro parquimetro){
-        ParquimetroDTO parquimetroDTO = new ParquimetroDTO();
-        parquimetroDTO.setId(parquimetro.getId());
-        parquimetroDTO.setPlaca(parquimetro.getPlaca());
-        parquimetroDTO.setEntrada(parquimetro.getEntrada());
-        parquimetroDTO.setSaidaAte(parquimetro.getSaidaAte());
-
-        return parquimetroDTO;
-    }
-}
