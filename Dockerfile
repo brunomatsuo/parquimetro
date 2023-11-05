@@ -9,7 +9,7 @@ COPY . /usr/src/app
 RUN mvn package
 
 # For Java 11,
-FROM adoptopenjdk/openjdk17
+FROM openjdk:17-jdk-slim-buster
 
 ARG JAR_FILE=parquimetro-0.0.1-SNAPSHOT.jar
 
