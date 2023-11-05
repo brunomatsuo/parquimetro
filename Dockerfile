@@ -1,16 +1,29 @@
-FROM openjdk:17-jdk-slim-buster
+# Definição de build para a imagem do Spring boot
+FROM openjdk:17-jdk-slim-buster as build
 
+WORKDIR /app
 
-	ENV APP_NAME parquimetro-0.0.1-SNAPSHOT
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
 
+RUN chmod +x ./mvnw
+# Faça o download das dependencias do pom.xml
+RUN ./mvnw dependency:go-offline -B
 
-	COPY ./target/${APP_NAME}.jar  /app/${APP_NAME}.jar
+COPY src src
 
+RUN ./mvnw package -DskipTests
+RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
 
-	WORKDIR /app
+# Definição de produção para a imagem do Spring boot
+FROM openjdk:17-jdk-slim-buster as production
+ARG DEPENDENCY=/app/target/dependency
 
+# Copiar as dependencias para o build artifact
+COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
+COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
+COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
 
-	CMD java -jar ${APP_NAME}.jar
-
-
-	EXPOSE 8080
+# Rodar a aplicação Spring boot
+ENTRYPOINT ["java", "-cp", "app:app/lib/*","com.parquimetro.fiap.ParquimetroApplication"]
