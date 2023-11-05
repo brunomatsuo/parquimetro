@@ -1,11 +1,11 @@
-# First stage: build the application
-FROM maven:3.8.3-jdk-11 AS build
-COPY . /app
-WORKDIR /app
+# build
+FROM maven
+WORKDIR /usr/src/app
+COPY pom.xml .
+RUN mvn -B -e -C -T 1C org.apache.maven.plugins:maven-dependency-plugin:3.1.2:go-offline
+COPY . .
+RUN mvn -B -e -o -T 1C verify
 
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
-
-COPY src ./src
-
-CMD ["sudo ./mvnw", "spring-boot:run"]
+# package without maven
+FROM openjdk
+COPY --from=0 /usr/src/app/target/*.jar ./
