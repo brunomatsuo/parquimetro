@@ -13,10 +13,10 @@ Tecnologias e Ferramentas utilizadas:
 
 Funcionamento: 
 
-  Cada nova entrada cria um registro no banco de dados com os seguintes campos: id, placa, entrada, saidaAte. 
+  Cada nova entrada cria um registro no banco de dados com os seguintes campos:  "id", "placa", "entrada", "saidaAte". 
   Ao criar a entrada é passado o número de tickets, sendo que cada ticket permite permanência por 30 minutos na vaga.
-  Para verificar o status de um veículo a partir de sua placa, é verificado:
-    1- se o veículo está registrado;
-    2- se o horário saidaAte é maior ou igual ao horário atual;
-  É possível adicionar mais tempo de permanência na vaga, adicionando mais tickets ao registro, sendo que cada ticket dá direito a mais 30 minutos de permanência.
+  Para verificar o status de um veículo a partir de sua placa, é verificado: <br /><br />
+    1- se o veículo está registrado; <br />
+    2- se o horário "saidaAte" é maior ou igual ao horário atual; <br /><br />
+    É possível adicionar mais tempo de permanência na vaga, adicionando mais tickets ao registro, sendo que cada ticket dá direito a mais 30 minutos de permanência.
 
